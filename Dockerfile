@@ -3,7 +3,7 @@ MAINTAINER Francis Chuang <francis.chuang@boostport.com>
 
 ENV HADOOP_VER=2.7.3 HADOOP_PREFIX=/opt/hadoop
 
-RUN apk --no-cache --update add bash ca-certificates gnupg openssl su-exec tar \
+RUN apk --no-cache --update add bash ca-certificates gnupg openssl su-exec tar nginx curl \
  && apk --no-cache --update --repository https://dl-3.alpinelinux.org/alpine/edge/community/ add xmlstarlet \
  && update-ca-certificates \
 \

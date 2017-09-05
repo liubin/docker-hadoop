@@ -16,9 +16,12 @@ addConfig $CORE_SITE "ha.zookeeper.quorum" $HA_ZOOKEEPER_QUORUM
 addConfig $CORE_SITE "ha.zookeeper.parent-znode" /$CLUSTER_NAME
 
 # Update hdfs-site.xml
+addConfig $HDFS_SITE "dfs.namenode.datanode.registration.ip-hostname-check" "false"
 addConfig $HDFS_SITE "dfs.permissions.superusergroup" "hadoop"
 addConfig $HDFS_SITE "dfs.nameservices" $DFS_NAMESERVICE_ID
 addConfig $HDFS_SITE "dfs.ha.namenodes.${DFS_NAMESERVICE_ID}" "nn1,nn2"
+
+
 
 : ${DFS_NAMENODE_RPC_ADDRESS_NN1:?"DFS_NAMENODE_RPC_ADDRESS_NN1 is required."}
 addConfig $HDFS_SITE "dfs.namenode.rpc-address.${DFS_NAMESERVICE_ID}.nn1" $DFS_NAMENODE_RPC_ADDRESS_NN1
@@ -103,5 +106,15 @@ if [ $? != 0 ] && [ -z "$STANDBY" ]; then
     su-exec hadoop $HADOOP_PREFIX/bin/hadoop fs -mkdir /tmp
     su-exec hadoop $HADOOP_PREFIX/bin/hadoop fs -chmod -R 1777 /tmp
 fi
+
+# start nginx
+mkdir /run/nginx
+/usr/sbin/nginx
+
+NGINX_PORT=${NGINX_PORT:-"9090"}
+sed -i "s/listen       80/listen       ${NGINX_PORT}/" /etc/nginx/nginx.conf
+
+cp /opt/hadoop/etc/hadoop/hdfs-site.xml /var/lib/nginx/html/
+cp /opt/hadoop/etc/hadoop/core-site.xml /var/lib/nginx/html/
 
 while true; do sleep 1; done
