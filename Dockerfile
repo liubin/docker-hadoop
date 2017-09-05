@@ -34,6 +34,8 @@ VOLUME ["/var/lib/hadoop"]
 ADD ["run-hadoop.sh", "/"]
 ADD ["/roles", "/roles"]
 
+COPY nginx.default.conf /etc/nginx/conf.d/default.conf
+
 #      Namenode              Datanode                     Journalnode
 EXPOSE 8020 9000 50070 50470 50010 50075 50475 1006 50020 8485 8480 8481
 

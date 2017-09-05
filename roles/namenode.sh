@@ -109,12 +109,14 @@ fi
 
 # start nginx
 mkdir /run/nginx
-/usr/sbin/nginx
+mkdir -p /var/tmp/nginx
 
 NGINX_PORT=${NGINX_PORT:-"9090"}
-sed -i "s/listen       80/listen       ${NGINX_PORT}/" /etc/nginx/nginx.conf
+sed -i "s/NGINX_PORT/${NGINX_PORT}/" /etc/nginx/conf.d/default.conf
 
 cp /opt/hadoop/etc/hadoop/hdfs-site.xml /var/lib/nginx/html/
 cp /opt/hadoop/etc/hadoop/core-site.xml /var/lib/nginx/html/
+
+/usr/sbin/nginx
 
 while true; do sleep 1; done
