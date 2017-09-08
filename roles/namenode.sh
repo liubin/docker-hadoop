@@ -69,8 +69,7 @@ until $(nc -z -v -w5 ${REMOTE_ADDR[0]} ${REMOTE_ADDR[1]}); do
 done
 
 # Format namenode
-if [ -z "$STANDBY" ]; then
-
+if [ "$ACTIVE" == "true" ]; then
     echo "Formatting zookeeper"
     su-exec hadoop $HADOOP_PREFIX/bin/hdfs zkfc -formatZK -nonInteractive
 
@@ -82,11 +81,11 @@ if [ -z "$STANDBY" ]; then
 fi
 
 # Set this namenode as standby if required
-if [ -n "$STANDBY" ]; then
+if [ "$ACTIVE" == "true" ]; then
+    echo "Starting namenode in active mode..."
+else
     echo "Starting namenode in standby mode..."
     su-exec hadoop $HADOOP_PREFIX/bin/hdfs namenode -bootstrapStandby
-else
-    echo "Starting namenode..."
 fi
 
 trap 'kill %1; kill %2' SIGINT SIGTERM
@@ -102,7 +101,7 @@ su-exec hadoop $HADOOP_PREFIX/bin/hdfs dfsadmin -safemode wait
 # Create the /tmp directory if it doesn't exist
 su-exec hadoop $HADOOP_PREFIX/bin/hadoop fs -test -d /tmp
 
-if [ $? != 0 ] && [ -z "$STANDBY" ]; then
+if [ $? != 0 ] && [ "$ACTIVE" == "true" ]; then
     su-exec hadoop $HADOOP_PREFIX/bin/hadoop fs -mkdir /tmp
     su-exec hadoop $HADOOP_PREFIX/bin/hadoop fs -chmod -R 1777 /tmp
 fi

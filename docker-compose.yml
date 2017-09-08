@@ -52,6 +52,7 @@ services:
       DFS_NAMENODE_HTTP_ADDRESS_NN1: nn1:50070
       DFS_NAMENODE_HTTP_ADDRESS_NN2: nn2:50070
       HA_ZOOKEEPER_QUORUM: zk:2181
+      ACTIVE: "true"
       HADOOP_ROLE: namenode
     ports:
       - "50070:50070"
@@ -69,7 +70,6 @@ services:
       DFS_NAMENODE_HTTP_ADDRESS_NN1: nn1:50070
       DFS_NAMENODE_HTTP_ADDRESS_NN2: nn2:50070
       HA_ZOOKEEPER_QUORUM: zk:2181
-      STANDBY: "true"
       HADOOP_ROLE: namenode
     ports:
       - "50071:50070"
