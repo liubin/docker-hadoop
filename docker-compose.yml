@@ -45,7 +45,7 @@ services:
     hostname: nn1
     environment:
       CLUSTER_NAME: mycluster
-      DFS_NAMESERVICE_ID: ns1
+      DFS_NAMESERVICES: ns1
       DFS_NAMENODE_SHARED_EDITS_DIR: jn1:8485,jn2:8485,jn3:8485
       DFS_NAMENODE_RPC_ADDRESS_NN1: nn1:8020
       DFS_NAMENODE_RPC_ADDRESS_NN2: nn2:8020
@@ -63,7 +63,7 @@ services:
     hostname: nn2
     environment:
       CLUSTER_NAME: mycluster
-      DFS_NAMESERVICE_ID: ns1
+      DFS_NAMESERVICES: ns1
       DFS_NAMENODE_SHARED_EDITS_DIR: jn1:8485,jn2:8485,jn3:8485
       DFS_NAMENODE_RPC_ADDRESS_NN1: nn1:8020
       DFS_NAMENODE_RPC_ADDRESS_NN2: nn2:8020

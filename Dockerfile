@@ -72,7 +72,7 @@ RUN cd /tmp \
  && sed -ri 's/^(.*JniBasedUnixGroupsNetgroupMapping.c)/#\1/g' hadoop-common-project/hadoop-common/src/CMakeLists.txt \
  && sed -ri 's/^( *container)/\1\n    fts/g' hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager/src/CMakeLists.txt \
  && sed -ri 's#^(include_directories.*)#\1\n    /usr/include/tirpc#' hadoop-tools/hadoop-pipes/src/CMakeLists.txt \
- && sed -ri 's/^( *pthread)/\1\n    tirpc/g' hadoop-tools/hadoop-pipes/src/CMakeLists.txt  \
+ && sed -ri 's/^( *pthread)/\1\n    tirpc/g' hadoop-tools/hadoop-pipes/src/CMakeLists.txt \
  && MAVEN_OPTS=-Xmx512M mvn -e clean package -Dmaven.javadoc.skip=true -DskipTests=true -Pdist,native -Dtar -Dsnappy.lib=/usr/lib -Dbundle.snappy \
 # Unzip hadoop to /opt
  && tar -xzf hadoop-dist/target/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_PREFIX  --strip-components 1 \

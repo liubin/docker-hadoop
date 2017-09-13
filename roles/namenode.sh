@@ -4,8 +4,8 @@ NAMENODE_FORMATTED_FLAG="/var/lib/hadoop/namenode-is-formatted"
 
 # Update core-site.xml
 : ${CLUSTER_NAME:?"CLUSTER_NAME is required."}
-: $DFS_NAMESERVICE_ID:?"DFS_NAMESERVICE_ID is required."}
-addConfig $CORE_SITE "fs.defaultFS" "hdfs://${DFS_NAMESERVICE_ID}"
+: $DFS_NAMESERVICES:?"DFS_NAMESERVICES is required."}
+addConfig $CORE_SITE "fs.defaultFS" "hdfs://${DFS_NAMESERVICES}"
 addConfig $CORE_SITE "fs.trash.interval" ${FS_TRASH_INTERVAL:=1440}
 addConfig $CORE_SITE "fs.trash.checkpoint.interval" ${FS_TRASH_CHECKPOINT_INTERVAL:=0}
 addConfig $CORE_SITE "ipc.client.connect.retry.interval" 6000
@@ -21,29 +21,29 @@ addConfig $CORE_SITE "ha.zookeeper.parent-znode" /$CLUSTER_NAME
 # Update hdfs-site.xml
 addConfig $HDFS_SITE "dfs.namenode.datanode.registration.ip-hostname-check" "false"
 addConfig $HDFS_SITE "dfs.permissions.superusergroup" "hadoop"
-addConfig $HDFS_SITE "dfs.nameservices" $DFS_NAMESERVICE_ID
-addConfig $HDFS_SITE "dfs.ha.namenodes.${DFS_NAMESERVICE_ID}" "nn1,nn2"
+addConfig $HDFS_SITE "dfs.nameservices" $DFS_NAMESERVICES
+addConfig $HDFS_SITE "dfs.ha.namenodes.${DFS_NAMESERVICES}" "nn1,nn2"
 
 
 
 : ${DFS_NAMENODE_RPC_ADDRESS_NN1:?"DFS_NAMENODE_RPC_ADDRESS_NN1 is required."}
-addConfig $HDFS_SITE "dfs.namenode.rpc-address.${DFS_NAMESERVICE_ID}.nn1" $DFS_NAMENODE_RPC_ADDRESS_NN1
+addConfig $HDFS_SITE "dfs.namenode.rpc-address.${DFS_NAMESERVICES}.nn1" $DFS_NAMENODE_RPC_ADDRESS_NN1
 
 : ${DFS_NAMENODE_RPC_ADDRESS_NN2:?"DFS_NAMENODE_RPC_ADDRESS_NN2 is required."}
-addConfig $HDFS_SITE "dfs.namenode.rpc-address.${DFS_NAMESERVICE_ID}.nn2" $DFS_NAMENODE_RPC_ADDRESS_NN2
+addConfig $HDFS_SITE "dfs.namenode.rpc-address.${DFS_NAMESERVICES}.nn2" $DFS_NAMENODE_RPC_ADDRESS_NN2
 
 : ${DFS_NAMENODE_HTTP_ADDRESS_NN1:?"DFS_NAMENODE_HTTP_ADDRESS_NN1 is required."}
-addConfig $HDFS_SITE "dfs.namenode.http-address.${DFS_NAMESERVICE_ID}.nn1" $DFS_NAMENODE_HTTP_ADDRESS_NN1
+addConfig $HDFS_SITE "dfs.namenode.http-address.${DFS_NAMESERVICES}.nn1" $DFS_NAMENODE_HTTP_ADDRESS_NN1
 
 : ${DFS_NAMENODE_HTTP_ADDRESS_NN2:?"DFS_NAMENODE_HTTP_ADDRESS_NN2 is required."}
-addConfig $HDFS_SITE "dfs.namenode.http-address.${DFS_NAMESERVICE_ID}.nn2" $DFS_NAMENODE_HTTP_ADDRESS_NN2
+addConfig $HDFS_SITE "dfs.namenode.http-address.${DFS_NAMESERVICES}.nn2" $DFS_NAMENODE_HTTP_ADDRESS_NN2
 
-addConfig $HDFS_SITE "dfs.client.failover.proxy.provider.${DFS_NAMESERVICE_ID}" "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider"
+addConfig $HDFS_SITE "dfs.client.failover.proxy.provider.${DFS_NAMESERVICES}" "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider"
 addConfig $HDFS_SITE "dfs.namenode.name.dir" ${DFS_NAMENODE_NAME_DIR:="file:///var/lib/hadoop/name"}
 
 : ${DFS_NAMENODE_SHARED_EDITS_DIR:?"DFS_NAMENODE_SHARED_EDITS_DIR is required."}
 DFS_NAMENODE_SHARED_EDITS_DIR=${DFS_NAMENODE_SHARED_EDITS_DIR//","/";"}
-addConfig $HDFS_SITE "dfs.namenode.shared.edits.dir" "qjournal://${DFS_NAMENODE_SHARED_EDITS_DIR}/${DFS_NAMESERVICE_ID}"
+addConfig $HDFS_SITE "dfs.namenode.shared.edits.dir" "qjournal://${DFS_NAMENODE_SHARED_EDITS_DIR}/${DFS_NAMESERVICES}"
 
 addConfig $HDFS_SITE "dfs.ha.fencing.methods" "shell(/bin/true)"
 
@@ -116,11 +116,8 @@ mkdir -p /var/tmp/nginx
 NGINX_PORT=${NGINX_PORT:-"9090"}
 sed -i "s/NGINX_PORT/${NGINX_PORT}/" /etc/nginx/conf.d/default.conf
 
-cp ${HADOOP_PREFIX}/etc/hadoop/hdfs-site.xml /var/lib/nginx/html/
-cp ${HADOOP_PREFIX}/etc/hadoop/core-site.xml /var/lib/nginx/html/
-cp ${HADOOP_PREFIX}/lib/native/libhadoop.so.1.0.0 /var/lib/nginx/html/
-cp ${HADOOP_PREFIX}/lib/native/libsnappy.so.1.3.1 /var/lib/nginx/html/
-cp ${HADOOP_PREFIX}/lib/native/libhdfs.so.0.0.0 /var/lib/nginx/html/
+cd ${HADOOP_PREFIX}/etc && tar -cvzf /var/lib/nginx/html/hadoop.conf.tar.gz hadoop
+cd ${HADOOP_PREFIX}/lib && tar -cvzf /var/lib/nginx/html/hadoop.lib.native.tar.gz native
 
 /usr/sbin/nginx
 
