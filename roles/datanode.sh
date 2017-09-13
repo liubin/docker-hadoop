@@ -7,6 +7,8 @@ addConfig $CORE_SITE "fs.trash.checkpoint.interval" ${FS_TRASH_CHECKPOINT_INTERV
 addConfig $CORE_SITE "ipc.client.connect.retry.interval" 4000
 addConfig $CORE_SITE "ipc.client.connect.max.retries" 100
 
+addConfig $CORE_SITE "io.compression.codecs" "org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.SnappyCodec"
+
 # Update hdfs-site.xml
 addConfig $HDFS_SITE "dfs.permissions.superusergroup" "hadoop"
 addConfig $HDFS_SITE "dfs.datanode.max.transfer.threads" 4096

@@ -11,6 +11,9 @@ addConfig $CORE_SITE "fs.trash.checkpoint.interval" ${FS_TRASH_CHECKPOINT_INTERV
 addConfig $CORE_SITE "ipc.client.connect.retry.interval" 6000
 addConfig $CORE_SITE "ipc.client.connect.max.retries" 400
 
+
+addConfig $CORE_SITE "io.compression.codecs" "org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.SnappyCodec"
+
 : ${HA_ZOOKEEPER_QUORUM:?"HA_ZOOKEEPER_QUORUM is required."}
 addConfig $CORE_SITE "ha.zookeeper.quorum" $HA_ZOOKEEPER_QUORUM
 addConfig $CORE_SITE "ha.zookeeper.parent-znode" /$CLUSTER_NAME
@@ -113,8 +116,11 @@ mkdir -p /var/tmp/nginx
 NGINX_PORT=${NGINX_PORT:-"9090"}
 sed -i "s/NGINX_PORT/${NGINX_PORT}/" /etc/nginx/conf.d/default.conf
 
-cp /opt/hadoop/etc/hadoop/hdfs-site.xml /var/lib/nginx/html/
-cp /opt/hadoop/etc/hadoop/core-site.xml /var/lib/nginx/html/
+cp ${HADOOP_PREFIX}/etc/hadoop/hdfs-site.xml /var/lib/nginx/html/
+cp ${HADOOP_PREFIX}/etc/hadoop/core-site.xml /var/lib/nginx/html/
+cp ${HADOOP_PREFIX}/lib/native/libhadoop.so.1.0.0 /var/lib/nginx/html/
+cp ${HADOOP_PREFIX}/lib/native/libsnappy.so.1.3.1 /var/lib/nginx/html/
+cp ${HADOOP_PREFIX}/lib/native/libhdfs.so.0.0.0 /var/lib/nginx/html/
 
 /usr/sbin/nginx
 

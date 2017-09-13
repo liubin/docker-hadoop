@@ -1,23 +1,81 @@
 FROM openjdk:8-jdk-alpine
 MAINTAINER Francis Chuang <francis.chuang@boostport.com>
 
-ENV HADOOP_VER=2.7.3 HADOOP_PREFIX=/opt/hadoop
+ENV HADOOP_VERSION=2.7.4 HADOOP_PREFIX=/opt/hadoop
 
-RUN apk --no-cache --update add bash ca-certificates gnupg openssl su-exec tar nginx curl \
- && apk --no-cache --update --repository https://dl-3.alpinelinux.org/alpine/edge/community/ add xmlstarlet \
- && update-ca-certificates \
+RUN apk --no-cache --update add bash \
+    bzip2 \
+    fts \
+    fuse \
+    libressl-dev \
+    libtirpc \
+    snappy \
+    zlib \
+    ca-certificates \
+    gnupg \
+    openssl \
+    su-exec \
+    tar \
+    nginx \
+    curl \
+ && apk --no-cache --update --repository https://dl-3.alpinelinux.org/alpine/edge/community/ add xmlstarlet
+# && update-ca-certificates
+
+# Build deps 1
+RUN apk --no-cache --update add --virtual .builddeps.1 \
+        autoconf \
+        automake \
+        build-base \
+        libtool \
+        zlib-dev
+
+# Install Protobuf
+RUN cd /tmp \
+ && wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz \
+ && tar zxf protobuf-2.5.0.tar.gz \
+ && cd protobuf-2.5.0 \
+ && ./configure --prefix=/usr \
+ && make && make install && protoc --version \
 \
 # Set up directories
  && mkdir -p $HADOOP_PREFIX \
- && mkdir -p /var/lib/hadoop \
-\
+ && mkdir -p /var/lib/hadoop
+
 # Download Hadoop
- && wget -O /tmp/KEYS https://dist.apache.org/repos/dist/release/hadoop/common/KEYS \
+RUN wget -O /tmp/KEYS https://dist.apache.org/repos/dist/release/hadoop/common/KEYS \
  && gpg --import /tmp/KEYS \
- && wget -q -O /tmp/hadoop.tar.gz http://apache.mirror.digitalpacific.com.au/hadoop/common/hadoop-$HADOOP_VER/hadoop-$HADOOP_VER.tar.gz  \
- && wget -O /tmp/hadoop.asc https://dist.apache.org/repos/dist/release/hadoop/common/hadoop-$HADOOP_VER/hadoop-$HADOOP_VER.tar.gz.asc \
- && gpg --verify /tmp/hadoop.asc /tmp/hadoop.tar.gz \
- && tar -xzf /tmp/hadoop.tar.gz -C $HADOOP_PREFIX  --strip-components 1 \
+ && wget -q -O /tmp/hadoop-$HADOOP_VERSION-src.tar.gz http://ftp.yz.yamagata-u.ac.jp/pub/network/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION-src.tar.gz  \
+ && wget -O /tmp/hadoop.asc https://dist.apache.org/repos/dist/release/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION-src.tar.gz.asc \
+ && gpg --verify /tmp/hadoop.asc /tmp/hadoop-$HADOOP_VERSION-src.tar.gz
+# Intall build tools
+RUN apk --no-cache --update add --virtual .builddeps.2 \
+    autoconf \
+    automake \
+    build-base \
+    bzip2-dev \
+    cmake \
+    curl \
+    fts-dev \
+    fuse-dev \
+    git \
+    libtirpc-dev \
+    libtool \
+    maven \
+    snappy-dev \
+    zlib-dev
+
+# Unzip and build
+RUN cd /tmp \
+ && tar -xzf hadoop-$HADOOP_VERSION-src.tar.gz \
+ && cd hadoop-$HADOOP_VERSION-src \
+ && sed -ri 's/^#if defined\(__sun\)/#if 1/g' hadoop-common-project/hadoop-common/src/main/native/src/exception.c \
+ && sed -ri 's/^(.*JniBasedUnixGroupsNetgroupMapping.c)/#\1/g' hadoop-common-project/hadoop-common/src/CMakeLists.txt \
+ && sed -ri 's/^( *container)/\1\n    fts/g' hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-nodemanager/src/CMakeLists.txt \
+ && sed -ri 's#^(include_directories.*)#\1\n    /usr/include/tirpc#' hadoop-tools/hadoop-pipes/src/CMakeLists.txt \
+ && sed -ri 's/^( *pthread)/\1\n    tirpc/g' hadoop-tools/hadoop-pipes/src/CMakeLists.txt  \
+ && MAVEN_OPTS=-Xmx512M mvn -e clean package -Dmaven.javadoc.skip=true -DskipTests=true -Pdist,native -Dtar -Dsnappy.lib=/usr/lib -Dbundle.snappy \
+# Unzip hadoop to /opt
+ && tar -xzf hadoop-dist/target/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_PREFIX  --strip-components 1 \
 \
 # Set up permissions
  && addgroup -S hadoop \
@@ -26,8 +84,22 @@ RUN apk --no-cache --update add bash ca-certificates gnupg openssl su-exec tar n
  && chown -R hadoop:hadoop /var/lib/hadoop \
 \
 # Clean up
+ && cd / \
+ && rm -rf /tmp/* /var/tmp/* /var/cache/apk/* \
+ && rm -rf /tmp/hadoop-* \
+ && rm -rf ${HADOOP_PREFIX}/share/doc \
+ && for dir in common hdfs mapreduce tools yarn; do \
+        rm -rf ${HADOOP_PREFIX}/share/hadoop/${dir}/sources; \
+    done \
+ && rm -rf ${HADOOP_PREFIX}/share/hadoop/common/jdiff \
+ && rm -rf ${HADOOP_PREFIX}/share/hadoop/mapreduce/lib-examples \
+ && rm -rf ${HADOOP_PREFIX}/share/hadoop/yarn/test \
+ && find ${HADOOP_PREFIX}/share/hadoop -name *test*.jar | xargs rm -rf \
+ && rm -rf /root/.m2 \
  && apk del gnupg openssl tar \
- && rm -rf /tmp/* /var/tmp/* /var/cache/apk/*
+ && apk del \
+  .builddeps.1 \
+  .builddeps.2
 
 VOLUME ["/var/lib/hadoop"]
 
