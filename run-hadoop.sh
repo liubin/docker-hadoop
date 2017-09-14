@@ -19,16 +19,16 @@ addConfig () {
 
 CORE_SITE="$HADOOP_HOME/etc/hadoop/core-site.xml"
 HDFS_SITE="$HADOOP_HOME/etc/hadoop/hdfs-site.xml"
-LOG_DIR="/var/log/hadoop/hdfs"
-PID_DIR="/var/run/hadoop/hdfs"
+# LOG_DIR="/var/log/hadoop/hdfs"
+# PID_DIR="/var/run/hadoop/hdfs"
 HADOOP_CONF_DIR="/opt/hadoop/etc/hadoop"
 
 if [[ ${HADOOP_ROLE,,} = namenode ]]; then
-    source roles/namenode.sh
+    source /roles/namenode.sh
 elif [[ ${HADOOP_ROLE,,} = datanode ]]; then
-    source roles/datanode.sh
+    source /roles/datanode.sh
 elif [[ ${HADOOP_ROLE,,} = journalnode ]]; then
-    source roles/journalnode.sh
+    source /roles/journalnode.sh
 else
     echo "HADOOP_ROLE's value must be one of: namenode, datanode or journalnode"
     exit 1

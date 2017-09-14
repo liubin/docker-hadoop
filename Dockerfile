@@ -18,19 +18,19 @@ RUN apk --no-cache --update add bash \
     tar \
     nginx \
     curl \
- && apk --no-cache --update --repository https://dl-3.alpinelinux.org/alpine/edge/community/ add xmlstarlet
+ && apk --no-cache --update --repository https://dl-3.alpinelinux.org/alpine/edge/community/ add xmlstarlet \
 # && update-ca-certificates
-
+\
 # Build deps 1
-RUN apk --no-cache --update add --virtual .builddeps.1 \
+ && apk --no-cache --update add --virtual .builddeps.1 \
         autoconf \
         automake \
         build-base \
         libtool \
-        zlib-dev
-
+        zlib-dev \
+\
 # Install Protobuf
-RUN cd /tmp \
+ && cd /tmp \
  && wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz \
  && tar zxf protobuf-2.5.0.tar.gz \
  && cd protobuf-2.5.0 \
@@ -39,16 +39,17 @@ RUN cd /tmp \
 \
 # Set up directories
  && mkdir -p $HADOOP_HOME \
- && mkdir -p /var/lib/hadoop
-
+ && mkdir -p /var/lib/hadoop \
+\
 # Download Hadoop
-RUN wget -O /tmp/KEYS https://dist.apache.org/repos/dist/release/hadoop/common/KEYS \
+&& wget -O /tmp/KEYS https://dist.apache.org/repos/dist/release/hadoop/common/KEYS \
  && gpg --import /tmp/KEYS \
  && wget -q -O /tmp/hadoop-$HADOOP_VERSION-src.tar.gz http://ftp.yz.yamagata-u.ac.jp/pub/network/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION-src.tar.gz  \
  && wget -O /tmp/hadoop.asc https://dist.apache.org/repos/dist/release/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION-src.tar.gz.asc \
- && gpg --verify /tmp/hadoop.asc /tmp/hadoop-$HADOOP_VERSION-src.tar.gz
+ && gpg --verify /tmp/hadoop.asc /tmp/hadoop-$HADOOP_VERSION-src.tar.gz \
+\ 
 # Intall build tools
-RUN apk --no-cache --update add --virtual .builddeps.2 \
+ && apk --no-cache --update add --virtual .builddeps.2 \
     autoconf \
     automake \
     build-base \
@@ -62,10 +63,10 @@ RUN apk --no-cache --update add --virtual .builddeps.2 \
     libtool \
     maven \
     snappy-dev \
-    zlib-dev
-
+    zlib-dev \
+\ 
 # Unzip and build
-RUN cd /tmp \
+ && cd /tmp \
  && tar -xzf hadoop-$HADOOP_VERSION-src.tar.gz \
  && cd hadoop-$HADOOP_VERSION-src \
  && sed -ri 's/^#if defined\(__sun\)/#if 1/g' hadoop-common-project/hadoop-common/src/main/native/src/exception.c \
@@ -114,3 +115,4 @@ EXPOSE 8020 9000 50070 50470 50010 50075 50475 1006 50020 8485 8480 8481
 CMD ["/run-hadoop.sh"]
 WORKDIR $HADOOP_HOME
 ENV HADOOP_ROOT_LOGGER="INFO,DRFA"
+ENV PATH $PATH:$HADOOP_HOME/bin
