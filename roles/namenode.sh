@@ -124,6 +124,15 @@ sed -i "s/NGINX_PORT/${NGINX_PORT}/" /etc/nginx/conf.d/default.conf
 cd ${HADOOP_HOME}/etc && tar -cvzf /var/lib/nginx/html/hadoop.conf.tar.gz hadoop
 cd ${HADOOP_HOME}/lib && tar -cvzf /var/lib/nginx/html/hadoop.lib.native.tar.gz native
 
+# /usr/sbin/nginx -g daemon off;
 /usr/sbin/nginx
 
-while true; do sleep 1; done
+echo -e "\nInit has completed ..."
+while true; do
+    x=$(ps -ef | grep java | grep -v "grep" | wc -l)
+    if [[ $x -eq 0 ]]; then
+        echo "No Java processes is running, exit ...."
+        exit 0
+    fi
+    sleep 30
+done
