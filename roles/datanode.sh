@@ -59,4 +59,4 @@ for i in "${DFS_DATANODE_NAME_DIRS[@]}"; do
 done
 
 # Start the datanode
-exec su-exec hadoop $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR datanode
+exec su-exec hadoop $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR datanode

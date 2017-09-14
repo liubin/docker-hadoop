@@ -1,7 +1,7 @@
 FROM openjdk:8-jdk-alpine
 MAINTAINER Francis Chuang <francis.chuang@boostport.com>
 
-ENV HADOOP_VERSION=2.7.4 HADOOP_PREFIX=/opt/hadoop
+ENV HADOOP_VERSION=2.7.4 HADOOP_HOME=/opt/hadoop
 
 RUN apk --no-cache --update add bash \
     bzip2 \
@@ -38,7 +38,7 @@ RUN cd /tmp \
  && make && make install && protoc --version \
 \
 # Set up directories
- && mkdir -p $HADOOP_PREFIX \
+ && mkdir -p $HADOOP_HOME \
  && mkdir -p /var/lib/hadoop
 
 # Download Hadoop
@@ -75,26 +75,26 @@ RUN cd /tmp \
  && sed -ri 's/^( *pthread)/\1\n    tirpc/g' hadoop-tools/hadoop-pipes/src/CMakeLists.txt \
  && MAVEN_OPTS=-Xmx512M mvn -e clean package -Dmaven.javadoc.skip=true -DskipTests=true -Pdist,native -Dtar -Dsnappy.lib=/usr/lib -Dbundle.snappy \
 # Unzip hadoop to /opt
- && tar -xzf hadoop-dist/target/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_PREFIX  --strip-components 1 \
+ && tar -xzf hadoop-dist/target/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME  --strip-components 1 \
 \
 # Set up permissions
  && addgroup -S hadoop \
- && adduser -h $HADOOP_PREFIX -G hadoop -S -D -H -s /bin/false -g hadoop hadoop \
- && chown -R hadoop:hadoop $HADOOP_PREFIX \
+ && adduser -h $HADOOP_HOME -G hadoop -S -D -H -s /bin/false -g hadoop hadoop \
+ && chown -R hadoop:hadoop $HADOOP_HOME \
  && chown -R hadoop:hadoop /var/lib/hadoop \
 \
 # Clean up
  && cd / \
  && rm -rf /tmp/* /var/tmp/* /var/cache/apk/* \
  && rm -rf /tmp/hadoop-* \
- && rm -rf ${HADOOP_PREFIX}/share/doc \
+ && rm -rf ${HADOOP_HOME}/share/doc \
  && for dir in common hdfs mapreduce tools yarn; do \
-        rm -rf ${HADOOP_PREFIX}/share/hadoop/${dir}/sources; \
+        rm -rf ${HADOOP_HOME}/share/hadoop/${dir}/sources; \
     done \
- && rm -rf ${HADOOP_PREFIX}/share/hadoop/common/jdiff \
- && rm -rf ${HADOOP_PREFIX}/share/hadoop/mapreduce/lib-examples \
- && rm -rf ${HADOOP_PREFIX}/share/hadoop/yarn/test \
- && find ${HADOOP_PREFIX}/share/hadoop -name *test*.jar | xargs rm -rf \
+ && rm -rf ${HADOOP_HOME}/share/hadoop/common/jdiff \
+ && rm -rf ${HADOOP_HOME}/share/hadoop/mapreduce/lib-examples \
+ && rm -rf ${HADOOP_HOME}/share/hadoop/yarn/test \
+ && find ${HADOOP_HOME}/share/hadoop -name *test*.jar | xargs rm -rf \
  && rm -rf /root/.m2 \
  && apk del gnupg openssl tar \
  && apk del \

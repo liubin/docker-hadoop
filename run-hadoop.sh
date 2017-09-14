@@ -17,8 +17,8 @@ addConfig () {
      $1
 }
 
-CORE_SITE="$HADOOP_PREFIX/etc/hadoop/core-site.xml"
-HDFS_SITE="$HADOOP_PREFIX/etc/hadoop/hdfs-site.xml"
+CORE_SITE="$HADOOP_HOME/etc/hadoop/core-site.xml"
+HDFS_SITE="$HADOOP_HOME/etc/hadoop/hdfs-site.xml"
 LOG_DIR="/var/log/hadoop/hdfs"
 PID_DIR="/var/run/hadoop/hdfs"
 HADOOP_CONF_DIR="/opt/hadoop/etc/hadoop"

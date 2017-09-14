@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
 NAMENODE_FORMATTED_FLAG="/var/lib/hadoop/namenode-is-formatted"
+NAMENODE_BOOTSTRAPSTANDBY_FLAG="/var/lib/hadoop/namenode-is-bootstrapStandby"
 
 # Update core-site.xml
 : ${CLUSTER_NAME:?"CLUSTER_NAME is required."}
-: $DFS_NAMESERVICES:?"DFS_NAMESERVICES is required."}
+: ${DFS_NAMESERVICES:?"DFS_NAMESERVICES is required."}
 addConfig $CORE_SITE "fs.defaultFS" "hdfs://${DFS_NAMESERVICES}"
 addConfig $CORE_SITE "fs.trash.interval" ${FS_TRASH_INTERVAL:=1440}
 addConfig $CORE_SITE "fs.trash.checkpoint.interval" ${FS_TRASH_CHECKPOINT_INTERVAL:=0}
@@ -74,11 +75,11 @@ done
 # Format namenode
 if [ "$ACTIVE" == "true" ]; then
     echo "Formatting zookeeper"
-    su-exec hadoop $HADOOP_PREFIX/bin/hdfs zkfc -formatZK -nonInteractive
+    su-exec hadoop $HADOOP_HOME/bin/hdfs zkfc -formatZK -nonInteractive
 
     if [ ! -f $NAMENODE_FORMATTED_FLAG ]; then
         echo "Formatting namenode..."
-        su-exec hadoop $HADOOP_PREFIX/bin/hdfs namenode -format -nonInteractive -clusterId $CLUSTER_NAME
+        su-exec hadoop $HADOOP_HOME/bin/hdfs namenode -format -nonInteractive -clusterId $CLUSTER_NAME
         su-exec hadoop touch $NAMENODE_FORMATTED_FLAG
     fi
 fi
@@ -88,25 +89,29 @@ if [ "$ACTIVE" == "true" ]; then
     echo "Starting namenode in active mode..."
 else
     echo "Starting namenode in standby mode..."
-    su-exec hadoop $HADOOP_PREFIX/bin/hdfs namenode -bootstrapStandby
+    if [ ! -f $NAMENODE_BOOTSTRAPSTANDBY_FLAG ]; then
+        echo "Bootstrap standby namenode..."
+        su-exec hadoop $HADOOP_HOME/bin/hdfs namenode -bootstrapStandby
+        su-exec hadoop touch $NAMENODE_BOOTSTRAPSTANDBY_FLAG
+    fi
 fi
 
 trap 'kill %1; kill %2' SIGINT SIGTERM
 
-su-exec hadoop $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR namenode &
+su-exec hadoop $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR namenode &
 
 # Start the zkfc
-su-exec hadoop $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR zkfc &
+su-exec hadoop $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR zkfc &
 
 # Wait for cluster to be ready
-su-exec hadoop $HADOOP_PREFIX/bin/hdfs dfsadmin -safemode wait
+su-exec hadoop $HADOOP_HOME/bin/hdfs dfsadmin -safemode wait
 
 # Create the /tmp directory if it doesn't exist
-su-exec hadoop $HADOOP_PREFIX/bin/hadoop fs -test -d /tmp
+su-exec hadoop $HADOOP_HOME/bin/hadoop fs -test -d /tmp
 
 if [ $? != 0 ] && [ "$ACTIVE" == "true" ]; then
-    su-exec hadoop $HADOOP_PREFIX/bin/hadoop fs -mkdir /tmp
-    su-exec hadoop $HADOOP_PREFIX/bin/hadoop fs -chmod -R 1777 /tmp
+    su-exec hadoop $HADOOP_HOME/bin/hadoop fs -mkdir /tmp
+    su-exec hadoop $HADOOP_HOME/bin/hadoop fs -chmod -R 1777 /tmp
 fi
 
 # start nginx
@@ -116,8 +121,8 @@ mkdir -p /var/tmp/nginx
 NGINX_PORT=${NGINX_PORT:-"9090"}
 sed -i "s/NGINX_PORT/${NGINX_PORT}/" /etc/nginx/conf.d/default.conf
 
-cd ${HADOOP_PREFIX}/etc && tar -cvzf /var/lib/nginx/html/hadoop.conf.tar.gz hadoop
-cd ${HADOOP_PREFIX}/lib && tar -cvzf /var/lib/nginx/html/hadoop.lib.native.tar.gz native
+cd ${HADOOP_HOME}/etc && tar -cvzf /var/lib/nginx/html/hadoop.conf.tar.gz hadoop
+cd ${HADOOP_HOME}/lib && tar -cvzf /var/lib/nginx/html/hadoop.lib.native.tar.gz native
 
 /usr/sbin/nginx
 

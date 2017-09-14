@@ -13,4 +13,4 @@ mkdir -p $DFS_JOURNALNODE_EDITS_DIR
 chown -R hadoop:hadoop $DFS_JOURNALNODE_EDITS_DIR
 
 # Start the journalnode
-exec su-exec hadoop $HADOOP_PREFIX/bin/hdfs --config $HADOOP_CONF_DIR journalnode
+exec su-exec hadoop $HADOOP_HOME/bin/hdfs --config $HADOOP_CONF_DIR journalnode
