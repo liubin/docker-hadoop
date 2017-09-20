@@ -78,13 +78,16 @@ RUN apk --no-cache --update add bash \
 # Unzip hadoop to /opt
  && tar -xzf hadoop-dist/target/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME  --strip-components 1 \
 \
+# For gc logs
+ && mkdir $HADOOP_HOME/logs \
+\
 # Set up permissions
  && addgroup -S hadoop \
  && adduser -h $HADOOP_HOME -G hadoop -S -D -H -s /bin/false -g hadoop hadoop \
  && chown -R hadoop:hadoop $HADOOP_HOME \
  && chown -R hadoop:hadoop /var/lib/hadoop \
 \
-# Clean up
+ # Clean up
  && cd / \
  && rm -rf /tmp/* /var/tmp/* /var/cache/apk/* \
  && rm -rf /tmp/hadoop-* \
