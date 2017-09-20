@@ -46,6 +46,13 @@ addConfig $HDFS_SITE "dfs.datanode.data.dir" ${DFS_DATANODE_DATA_DIR:="file:///v
 [ ! -z "$DFS_DATANODE_AVAILABLE_SPACE_VOLUME_CHOOSING_POLICY_BALANCED_SPACE_THRESHOLD" ] && addConfig $HDFS_SITE "dfs.datanode.available-space-volume-choosing-policy.balanced-space-threshold" $DFS_DATANODE_AVAILABLE_SPACE_VOLUME_CHOOSING_POLICY_BALANCED_SPACE_THRESHOLD
 [ ! -z "$DFS_DATANODE_AVAILABLE_SPACE_VOLUME_CHOOSING_POLICY_BALANCED_SPACE_PREFRENCE_FRACTION" ] && addConfig $HDFS_SITE "dfs.datanode.available-space-volume-choosing-policy.balanced-space-preference-fraction" $DFS_DATANODE_AVAILABLE_SPACE_VOLUME_CHOOSING_POLICY_BALANCED_SPACE_PREFRENCE_FRACTION
 
+if [ ! -d "$DFS_DATANODE_DATA_DIR" ]
+then
+    echo "create ${DFS_DATANODE_DATA_DIR}"
+    mkdir -p $DFS_DATANODE_DATA_DIR
+    chown -R hadoop:hadoop $DFS_DATANODE_DATA_DIR
+fi
+
 # Create and set the data directories correctly
 IFS=',' read -ra DFS_DATANODE_NAME_DIRS <<< "$DFS_DATANODE_NAME_DIR"
 for i in "${DFS_DATANODE_NAME_DIRS[@]}"; do
